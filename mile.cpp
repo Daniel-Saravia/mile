@@ -1,5 +1,7 @@
 #include <GL/glut.h> // Include OpenGL Utility Toolkit library
 #include <cstdio>
+#include <math.h>
+
 // Defines the initial angle of the door, used to rotate the door around the y-axis
 float doorAngle = 0.0f;
 
@@ -40,21 +42,86 @@ void drawGrid() {
     glEnd();
 }
 
-// drawDoor ---------------------------------------------------------------------------------
+// Function to draw a circle for the door knob ---------------------------------------------
+void drawCircle(float cx, float cy, float r, int num_segments) {
+    glBegin(GL_POLYGON); // Can use GL_LINE_LOOP for a hollow circle
+    for(int ii = 0; ii < num_segments; ii++) {
+        float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments); //get the current angle
+        float x = r * cosf(theta); //calculate the x component
+        float y = r * sinf(theta); //calculate the y component
+        glVertex2f(x + cx, y + cy); //output vertex
+    }
+    glEnd();
+}
+
+// Function to draw an isosceles triangle flag with a rectangle at the base, with rotation ---------------------------
+void drawTriangleFlagWithRectangle(float baseX, float baseY, float baseWidth, float height, float rectHeight, float angle) {
+    glPushMatrix(); // Save the current transformation state
+
+    // Move the flag to the origin, rotate, and move it back
+    glTranslatef(baseX + baseWidth / 2.0f, baseY + rectHeight, 0.0f); // Translate to the rotation point (base of the triangle)
+    glRotatef(angle, 0.0f, 0.0f, 1.0f); // Rotate the flag around its base
+    glTranslatef(-(baseX + baseWidth / 2.0f), -(baseY + rectHeight), 0.0f); // Translate back
+
+    // Draw the isosceles triangle
+    glBegin(GL_TRIANGLES); // Start drawing a triangle
+    glColor3f(1.0, 0.0, 1.0); // Set color to red for the flag
+    glVertex2f(baseX, baseY + rectHeight); // Adjusted for rectangle height
+    glVertex2f(baseX + baseWidth, baseY + rectHeight); 
+    glVertex2f(baseX + baseWidth / 2.0f, baseY + rectHeight + height); // Top vertex
+    glEnd();
+
+    // Draw the white rectangle at the base of the triangle
+    glColor3f(1.0, 1.0, 1.0); // Set color to white for the rectangle
+    glBegin(GL_QUADS);
+    glVertex2f(baseX, baseY); // Bottom left
+    glVertex2f(baseX + baseWidth, baseY); // Bottom right
+    glVertex2f(baseX + baseWidth, baseY + rectHeight); // Top right
+    glVertex2f(baseX, baseY + rectHeight); // Top left
+    glEnd();
+
+    glPopMatrix(); // Restore the previous transformation state
+}
+
+void drawText(const char *text, float x, float y) {
+    glRasterPos2f(x, y); // Position the text on the screen
+    for (const char *c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c); // Draw each character
+    }
+}
+
 void drawDoor()
 {
     glPushMatrix();                      // Push the current matrix onto the stack
-    glColor3f(0.78, 0.74, 0.66);         // Set color to brown https://keiwando.com/color-picker/
+    glColor3f(0.78, 0.74, 0.66);         // Set door color to brown
     glTranslatef(-3.0, 0.0, 0.0);        // Translate to the position where the door will be drawn
     glRotatef(doorAngle, 0.0, 1.0, 0.0); // Rotate the door around the y-axis
-    glBegin(GL_POLYGON);                 // Begin drawing a polygon
+    glBegin(GL_POLYGON);                 // Begin drawing a polygon for the door
     glVertex2f(-4.0, -7.0);              // Define vertex 1
     glVertex2f(-4.0, 8.0);               // Define vertex 2
     glVertex2f(5.0, 8.0);                // Define vertex 3
     glVertex2f(5.0, -7.0);               // Define vertex 4
-    glEnd();                             // End drawing the polygon
+    glEnd();                             // End drawing the polygon for the door
+
+    // Draw the door knob
+    glColor3f(0.5, 0.5, 0.5);            // Set knob color to grey
+    drawCircle(3.5, 0.5, 0.5, 32);       // Draw the knob with center (3.5, 0.5), radius 0.5, and 32 segments for smoothness
+
+    // Draw the isosceles triangle flag with a white rectangle at the base
+    drawTriangleFlagWithRectangle(0, 3.0, 1.5, 4.0, 0.5, 235.0); // Parameters include rectangle height
+
+    // Set the color for the text
+    glColor3f(0.0, 0.0, 0.0); // Black color text
+
+    // Assuming the flag is not rotated for simplicity in positioning the text
+    // You'll need to adjust the x and y to position the text appropriately
+    float textX = 0; // Adjust based on where the flag is drawn
+    float textY = 4.5; // Adjust based on where the flag is drawn and the height of the flag
+    drawText("GCU LOPES", textX, textY);
+
     glPopMatrix();                       // Pop the current matrix from the stack
 }
+
 
 // drawDoorFrame ---------------------------------------------------------------------------------
 void drawDoorFrame()
@@ -90,8 +157,20 @@ void drawDoorFrame()
     glVertex2f(6.4, -7.0 - thickness);
     glVertex2f(6.4, -7.0 + thickness);
     glVertex2f(1.6, -7.0 + thickness);
+
+
+    // Draw middle vertical part of the frame as a rectangle
+    glBegin(GL_QUADS);
+    // Calculate the middle X position between the left and right sides of the door frame
+    float middleX = 2; // Average of the left X and right X values to find the middle
+    // Draw the bar from bottom to top
+    glVertex2f(middleX - thickness, -7.4); // Bottom-left
+    glVertex2f(middleX + thickness, -7.4); // Bottom-right
+    glVertex2f(middleX + thickness, 8.15); // Top-right
+    glVertex2f(middleX - thickness, 8.15); // Top-left
     glEnd();
 }
+
 
 // display ---------------------------------------------------------------------------------
 void display()
@@ -100,8 +179,8 @@ void display()
     glLoadIdentity();             // Load the identity matrix
 
     
-    //drawDoor();      // Draw the door
-    //drawDoorFrame(); // Draw the door frame
+    drawDoor();      // Draw the door
+    drawDoorFrame(); // Draw the door frame
     drawGrid();      // Draw the grid
 
     glFlush(); // Flush OpenGL pipeline
