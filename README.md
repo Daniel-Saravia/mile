@@ -22,6 +22,7 @@ The method of compilation depends on your operating system and installed compile
 
 
 g++ -o opengl_door opengl_door.cpp -lGL -lGLU -lglut
+
 And to run the program:
 
 ./opengl_door
