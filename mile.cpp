@@ -222,7 +222,7 @@ void display()
     drawRectangle(-10, 8.0, 20.0, 5, 0.0f, 0.1f, 0.1f);
 
     // side light
-    drawRectangle(2.5, -7, 3.5, 10, 0.0f, 0.1f, 0.1f);
+    drawRectangle(2.5, -7, 3.5, 15, 0.0f, 0.1f, 0.1f);
 
     // floor
     drawRectangle(-10, -12.0, 20.0, 5, 0.1f, 0.0f, 0.0f);  // Draw a blue rectangle
