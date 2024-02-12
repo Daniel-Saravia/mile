@@ -20,11 +20,10 @@ Ensure you have both OpenGL and the GLUT library installed on your system. These
 
 The method of compilation depends on your operating system and installed compiler. Here's an example using `g++` on Linux:
 
-```sh
+
 g++ -o opengl_door opengl_door.cpp -lGL -lGLU -lglut
 And to run the program:
 
-```sh
 ./opengl_door
 Replace opengl_door.cpp with the name of your source file. For Windows or other operating systems, ensure you have the appropriate compiler and link against the OpenGL and GLUT libraries as required.
 
