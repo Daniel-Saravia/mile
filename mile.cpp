@@ -16,18 +16,21 @@ void init()
 }
 
 // drawGrid ---------------------------------------------------------------------------------
-void drawGrid() {
+void drawGrid()
+{
     int i;
     glColor3f(0.8f, 0.8f, 0.8f); // Set grid color to light grey
     glBegin(GL_LINES);
 
     // Draw vertical grid lines
-    for (i = -10; i <= 10; i++) {
+    for (i = -10; i <= 10; i++)
+    {
         glVertex2f((float)i, -10.0f);
         glVertex2f((float)i, 10.0f);
     }
     // Draw horizontal grid lines
-    for (i = -10; i <= 10; i++) {
+    for (i = -10; i <= 10; i++)
+    {
         glVertex2f(-10.0f, (float)i);
         glVertex2f(10.0f, (float)i);
     }
@@ -35,7 +38,7 @@ void drawGrid() {
     glEnd();
 
     // Draw a red dot at the center
-    glPointSize(5.0f); // Set point size to make the dot larger
+    glPointSize(5.0f);           // Set point size to make the dot larger
     glColor3f(1.0f, 0.0f, 0.0f); // Set color to red
     glBegin(GL_POINTS);
     glVertex2f(0.0f, 0.0f); // Center point
@@ -43,51 +46,67 @@ void drawGrid() {
 }
 
 // Function to draw a circle for the door knob ---------------------------------------------
-void drawCircle(float cx, float cy, float r, int num_segments) {
+void drawCircle(float cx, float cy, float r, int num_segments)
+{
     glBegin(GL_POLYGON); // Can use GL_LINE_LOOP for a hollow circle
-    for(int ii = 0; ii < num_segments; ii++) {
-        float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments); //get the current angle
-        float x = r * cosf(theta); //calculate the x component
-        float y = r * sinf(theta); //calculate the y component
-        glVertex2f(x + cx, y + cy); //output vertex
+    for (int ii = 0; ii < num_segments; ii++)
+    {
+        float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments); // get the current angle
+        float x = r * cosf(theta);                                         // calculate the x component
+        float y = r * sinf(theta);                                         // calculate the y component
+        glVertex2f(x + cx, y + cy);                                        // output vertex
     }
     glEnd();
 }
 
 // Function to draw an isosceles triangle flag with a rectangle at the base, with rotation ---------------------------
-void drawTriangleFlagWithRectangle(float baseX, float baseY, float baseWidth, float height, float rectHeight, float angle) {
+void drawTriangleFlagWithRectangle(float baseX, float baseY, float baseWidth, float height, float rectHeight, float angle)
+{
     glPushMatrix(); // Save the current transformation state
 
     // Move the flag to the origin, rotate, and move it back
-    glTranslatef(baseX + baseWidth / 2.0f, baseY + rectHeight, 0.0f); // Translate to the rotation point (base of the triangle)
-    glRotatef(angle, 0.0f, 0.0f, 1.0f); // Rotate the flag around its base
+    glTranslatef(baseX + baseWidth / 2.0f, baseY + rectHeight, 0.0f);       // Translate to the rotation point (base of the triangle)
+    glRotatef(angle, 0.0f, 0.0f, 1.0f);                                     // Rotate the flag around its base
     glTranslatef(-(baseX + baseWidth / 2.0f), -(baseY + rectHeight), 0.0f); // Translate back
 
     // Draw the isosceles triangle
-    glBegin(GL_TRIANGLES); // Start drawing a triangle
-    glColor3f(1.0, 0.0, 1.0); // Set color to red for the flag
+    glBegin(GL_TRIANGLES);                 // Start drawing a triangle
+    glColor3f(1.0, 0.0, 1.0);              // Set color to red for the flag
     glVertex2f(baseX, baseY + rectHeight); // Adjusted for rectangle height
-    glVertex2f(baseX + baseWidth, baseY + rectHeight); 
+    glVertex2f(baseX + baseWidth, baseY + rectHeight);
     glVertex2f(baseX + baseWidth / 2.0f, baseY + rectHeight + height); // Top vertex
     glEnd();
 
     // Draw the white rectangle at the base of the triangle
     glColor3f(1.0, 1.0, 1.0); // Set color to white for the rectangle
     glBegin(GL_QUADS);
-    glVertex2f(baseX, baseY); // Bottom left
-    glVertex2f(baseX + baseWidth, baseY); // Bottom right
+    glVertex2f(baseX, baseY);                          // Bottom left
+    glVertex2f(baseX + baseWidth, baseY);              // Bottom right
     glVertex2f(baseX + baseWidth, baseY + rectHeight); // Top right
-    glVertex2f(baseX, baseY + rectHeight); // Top left
+    glVertex2f(baseX, baseY + rectHeight);             // Top left
     glEnd();
 
     glPopMatrix(); // Restore the previous transformation state
 }
 
-void drawText(const char *text, float x, float y) {
-    glRasterPos2f(x, y); // Position the text on the screen
-    for (const char *c = text; *c != '\0'; c++) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c); // Draw each character
+void drawStrokeText(const char *text, float x, float y, float z, float scale, float angle)
+{
+    glPushMatrix(); // Save the current transformation state
+
+    // Position and scale the text
+    glTranslatef(x, y, z);
+    glScalef(scale, scale, scale); // Scale the text to desired size
+
+    // Rotate the text
+    glRotatef(angle, 0.0f, 0.0f, 1.0f); // Rotate around the Z-axis
+
+    // Render the text
+    for (const char *c = text; *c != '\0'; c++)
+    {
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, *c);
     }
+
+    glPopMatrix(); // Restore the previous transformation state
 }
 
 void drawDoor()
@@ -104,24 +123,21 @@ void drawDoor()
     glEnd();                             // End drawing the polygon for the door
 
     // Draw the door knob
-    glColor3f(0.5, 0.5, 0.5);            // Set knob color to grey
-    drawCircle(3.5, 0.5, 0.5, 32);       // Draw the knob with center (3.5, 0.5), radius 0.5, and 32 segments for smoothness
+    glColor3f(0.5, 0.5, 0.5);      // Set knob color to grey
+    drawCircle(3.5, 0.5, 0.5, 32); // Draw the knob with center (3.5, 0.5), radius 0.5, and 32 segments for smoothness
 
     // Draw the isosceles triangle flag with a white rectangle at the base
     drawTriangleFlagWithRectangle(0, 3.0, 1.5, 4.0, 0.5, 235.0); // Parameters include rectangle height
 
-    // Set the color for the text
+    // Now, set the color for the stroke text
     glColor3f(0.0, 0.0, 0.0); // Black color text
 
-    // Assuming the flag is not rotated for simplicity in positioning the text
-    // You'll need to adjust the x and y to position the text appropriately
-    float textX = 0; // Adjust based on where the flag is drawn
-    float textY = 4.5; // Adjust based on where the flag is drawn and the height of the flag
-    drawText("GCU LOPES", textX, textY);
+    // Assuming the text needs to be rotated to match the flag's angle and scaled to fit
+    // Note: You'll likely need to adjust these values based on your flag's actual orientation and desired text appearance
+    drawStrokeText("GCU LOPES", 0.8, 3.5, 0.0, 0.0025, -40.0);
 
-    glPopMatrix();                       // Pop the current matrix from the stack
+    glPopMatrix(); // Pop the current matrix from the stack
 }
-
 
 // drawDoorFrame ---------------------------------------------------------------------------------
 void drawDoorFrame()
@@ -158,7 +174,6 @@ void drawDoorFrame()
     glVertex2f(6.4, -7.0 + thickness);
     glVertex2f(1.6, -7.0 + thickness);
 
-
     // Draw middle vertical part of the frame as a rectangle
     glBegin(GL_QUADS);
     // Calculate the middle X position between the left and right sides of the door frame
@@ -171,19 +186,67 @@ void drawDoorFrame()
     glEnd();
 }
 
+// Function to draw a simple rectangle with color parameters and a simulated thicker black border
+void drawRectangle(float x, float y, float width, float height, float red, float green, float blue)
+{
+    // Offset for the border thickness
+    float borderThickness = 0.1f; // Adjust this value to change the border thickness
+
+    // Draw the black border as a larger rectangle behind the main rectangle
+    glColor3f(0.0f, 0.0f, 0.0f); // Set color to black for the border
+    glBegin(GL_QUADS);           // Start drawing a rectangle for the border
+    // Calculate and draw vertices for the border, offsetting by the border thickness
+    glVertex2f(x - borderThickness, y - borderThickness);
+    glVertex2f(x + width + borderThickness, y - borderThickness);
+    glVertex2f(x + width + borderThickness, y + height + borderThickness);
+    glVertex2f(x - borderThickness, y + height + borderThickness);
+    glEnd(); // End drawing the border rectangle
+
+    // Draw the main filled rectangle
+    glColor3f(red, green, blue);       // Set the color for the main rectangle
+    glBegin(GL_QUADS);                 // Start drawing the main rectangle
+    glVertex2f(x, y);                  // Bottom left corner
+    glVertex2f(x + width, y);          // Bottom right corner
+    glVertex2f(x + width, y + height); // Top right corner
+    glVertex2f(x, y + height);         // Top left corner
+    glEnd();                           // End drawing the filled rectangle
+}
 
 // display ---------------------------------------------------------------------------------
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer
     glLoadIdentity();             // Load the identity matrix
+    
+    // roof
+    drawRectangle(-10, 8.0, 20.0, 5, 0.0f, 0.1f, 0.1f);
+
+    // side light
+    drawRectangle(2.5, -7, 3.5, 10, 0.0f, 0.1f, 0.1f);
+
+    // floor
+    drawRectangle(-10, -12.0, 20.0, 5, 0.1f, 0.0f, 0.0f);  // Draw a blue rectangle
+    
+    //trim left
+    drawRectangle(-10, -7.4, 3.0, 1, 0.0f, 0.0f, 0.0f);  // Draw a blue rectangle
+    
+    //trim right
+    drawRectangle(6, -7.4, 5.0, 1, 0.0f, 0.0f, 0.0f);  // Draw a blue rectangle
 
     
     drawDoor();      // Draw the door
     drawDoorFrame(); // Draw the door frame
-    drawGrid();      // Draw the grid
+    // drawGrid();      // Draw the grid
 
-    glFlush(); // Flush OpenGL pipeline
+    // Example call to drawRectangle with color parameters
+    // Parameters: X, Y, Width, Height, Red, Green, Blue
+    drawRectangle(2.5, 2.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f);  // Draw a blue rectangle
+    drawRectangle(2.5, -1.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
+    drawRectangle(2.5, -3.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
+    drawRectangle(2.5, -6.0, 3.0, 2.0, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
+    drawRectangle(6.8, 3.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f);  // Draw a blue rectangle
+    
+    glFlush();                                            // Flush OpenGL pipeline
 }
 
 // update ---------------------------------------------------------------------------------
@@ -209,7 +272,7 @@ int main(int argc, char **argv)
 {
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB); // Set display mode
-    glutInitWindowSize(700, 800);                // Set window size
+    glutInitWindowSize(800, 900);                // Set window size
     glutCreateWindow("OpenGL Door");             // Create a window with the specified title
     init();                                      // Call initialization function
     glutDisplayFunc(display);                    // Set display callback function
