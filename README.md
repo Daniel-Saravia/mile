@@ -25,7 +25,9 @@ g++ -o opengl_door opengl_door.cpp -lGL -lGLU -lglut
 
 And to run the program:
 
+
 ./opengl_door
+
 Replace opengl_door.cpp with the name of your source file. For Windows or other operating systems, ensure you have the appropriate compiler and link against the OpenGL and GLUT libraries as required.
 
 How It Works
