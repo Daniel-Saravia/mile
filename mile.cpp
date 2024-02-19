@@ -1,6 +1,9 @@
 #include <GL/glut.h> // Include OpenGL Utility Toolkit library
 #include <cstdio>
 #include <math.h>
+#include <GL/glext.h>
+
+
 
 // Defines the initial angle of the door, used to rotate the door around the y-axis
 float doorAngle = 0.0f;
@@ -9,11 +12,27 @@ float doorAngle = 0.0f;
 void init()
 {
     glClearColor(1.0, 1.0, 1.0, 1.0); // Set clear color to white
-    glMatrixMode(GL_PROJECTION);      // Set the current matrix mode to projection
-    glLoadIdentity();                 // Load the identity matrix
-    gluOrtho2D(-10, 10, -10, 10);     // Set up a 2D orthographic projection
-    glMatrixMode(GL_MODELVIEW);       // Set the current matrix mode to modelview
+
+    glEnable(GL_DEPTH_TEST); // Enable depth testing for z-culling
+
+    glMatrixMode(GL_PROJECTION); // Set the current matrix mode to projection
+    glLoadIdentity(); // Load the identity matrix
+
+    // Set up a perspective projection matrix
+    gluPerspective(45.0, // Field of view angle
+                   1.0, // Aspect ratio (you might want to make this dynamic)
+                   0.1, // Near clipping plane
+                   100.0); // Far clipping plane
+
+    glMatrixMode(GL_MODELVIEW); // Set the current matrix mode to modelview
+    glLoadIdentity(); // Load the identity matrix
+
+    // Set the camera position and orientation
+    gluLookAt(0.0, 0.0, 10.0, // Eye position (x, y, z)
+              0.0, 0.0, 0.0, // Center of the scene (x, y, z)
+              0.0, 1.0, 0.0); // Up vector (x, y, z)
 }
+
 
 // drawGrid ---------------------------------------------------------------------------------
 void drawGrid()
@@ -111,143 +130,236 @@ void drawStrokeText(const char *text, float x, float y, float z, float scale, fl
 
 void drawDoor()
 {
-    glPushMatrix();                      // Push the current matrix onto the stack
-    glColor3f(0.78, 0.74, 0.66);         // Set door color to brown
-    glTranslatef(-3.0, 0.0, 0.0);        // Translate to the position where the door will be drawn
-    glRotatef(doorAngle, 0.0, 1.0, 0.0); // Rotate the door around the y-axis
-    glBegin(GL_POLYGON);                 // Begin drawing a polygon for the door
-    glVertex2f(-4.0, -7.0);              // Define vertex 1
-    glVertex2f(-4.0, 8.0);               // Define vertex 2
-    glVertex2f(5.0, 8.0);                // Define vertex 3
-    glVertex2f(5.0, -7.0);               // Define vertex 4
-    glEnd();                             // End drawing the polygon for the door
+    glPushMatrix(); // Push the current matrix onto the stack
 
-    // Draw the door knob
-    glColor3f(0.5, 0.5, 0.5);      // Set knob color to grey
-    drawCircle(3.5, 0.5, 0.5, 32); // Draw the knob with center (3.5, 0.5), radius 0.5, and 32 segments for smoothness
+    glColor3f(0.78, 0.74, 0.66); // Set door color to brown
 
-    // Draw the isosceles triangle flag with a white rectangle at the base
-    drawTriangleFlagWithRectangle(0, 3.0, 1.5, 4.0, 0.5, 235.0); // Parameters include rectangle height
+    // Translate to the position where the door will be drawn
+    glTranslatef(-3.0, 0.0, 0.0); 
 
-    // Now, set the color for the stroke text
-    glColor3f(0.0, 0.0, 0.0); // Black color text
+    // Rotate the door around the y-axis
+    glRotatef(doorAngle, 0.0, 1.0, 0.0);
 
-    // Assuming the text needs to be rotated to match the flag's angle and scaled to fit
-    // Note: You'll likely need to adjust these values based on your flag's actual orientation and desired text appearance
-    drawStrokeText("GCU LOPES", 0.8, 3.5, 0.0, 0.0025, -40.0);
+    // Start drawing a 3D rectangular prism for the door
+    glBegin(GL_QUADS);
+
+    // Front face
+    glVertex3f(-4.0, -7.0, 0.0);
+    glVertex3f(-4.0, 8.0, 0.0);
+    glVertex3f(5.0, 8.0, 0.0);
+    glVertex3f(5.0, -7.0, 0.0);
+
+    // Back face
+    glVertex3f(-4.0, -7.0, -0.5);
+    glVertex3f(-4.0, 8.0, -0.5);
+    glVertex3f(5.0, 8.0, -0.5);
+    glVertex3f(5.0, -7.0, -0.5);
+
+    // Connect the sides
+    // Left Side
+    glVertex3f(-4.0, -7.0, 0.0);
+    glVertex3f(-4.0, 8.0, 0.0);
+    glVertex3f(-4.0, 8.0, -0.5);
+    glVertex3f(-4.0, -7.0, -0.5);
+
+    // Right Side
+    glVertex3f(5.0, -7.0, 0.0);
+    glVertex3f(5.0, 8.0, 0.0);
+    glVertex3f(5.0, 8.0, -0.5);
+    glVertex3f(5.0, -7.0, -0.5);
+
+    // Top
+    glVertex3f(-4.0, 8.0, 0.0);
+    glVertex3f(5.0, 8.0, 0.0);
+    glVertex3f(5.0, 8.0, -0.5);
+    glVertex3f(-4.0, 8.0, -0.5);
+
+    // Bottom
+    glVertex3f(-4.0, -7.0, 0.0);
+    glVertex3f(5.0, -7.0, 0.0);
+    glVertex3f(5.0, -7.0, -0.5);
+    glVertex3f(-4.0, -7.0, -0.5);
+
+    glEnd(); // End drawing the door
 
     glPopMatrix(); // Pop the current matrix from the stack
 }
 
-// drawDoorFrame ---------------------------------------------------------------------------------
-void drawDoorFrame()
-{
-    glColor3f(0.65, 0.65, 0.65); // Set color to light grey
-
-    // Define the thickness of the frame
-    float thickness = 0.5f; // Adjust this value to make the frame thicker or thinner
-
-    // Draw vertical parts of the frame as rectangles
-    glBegin(GL_QUADS);
-    // Left vertical part
-    glVertex2f(-7.3 - thickness, -7.4);
-    glVertex2f(-7.3 + thickness, -7.4);
-    glVertex2f(-7.3 + thickness, 8.15);
-    glVertex2f(-7.3 - thickness, 8.15);
-    // Right vertical part
-    glVertex2f(6.0 - thickness, -7.0);
-    glVertex2f(6.0 + thickness, -7.0);
-    glVertex2f(6.0 + thickness, 8.0);
-    glVertex2f(6.0 - thickness, 8.0);
-    glEnd();
-
-    // Draw horizontal parts of the frame as rectangles
-    glBegin(GL_QUADS);
-    // Top horizontal part
-    glVertex2f(-7.5, 7.8 + thickness);
-    glVertex2f(6.4, 7.8 + thickness);
-    glVertex2f(6.4, 7.8 - thickness);
-    glVertex2f(-7.5, 7.8 - thickness);
-    // Bottom horizontal part
-    glVertex2f(1.6, -7.0 - thickness);
-    glVertex2f(6.4, -7.0 - thickness);
-    glVertex2f(6.4, -7.0 + thickness);
-    glVertex2f(1.6, -7.0 + thickness);
-
-    // Draw middle vertical part of the frame as a rectangle
-    glBegin(GL_QUADS);
-    // Calculate the middle X position between the left and right sides of the door frame
-    float middleX = 2; // Average of the left X and right X values to find the middle
-    // Draw the bar from bottom to top
-    glVertex2f(middleX - thickness, -7.4); // Bottom-left
-    glVertex2f(middleX + thickness, -7.4); // Bottom-right
-    glVertex2f(middleX + thickness, 8.15); // Top-right
-    glVertex2f(middleX - thickness, 8.15); // Top-left
-    glEnd();
-}
-
 // Function to draw a simple rectangle with color parameters and a simulated thicker black border
-void drawRectangle(float x, float y, float width, float height, float red, float green, float blue)
+void drawRectangle(float x, float y, float z, float width, float height, float depth, float red, float green, float blue)
 {
     // Offset for the border thickness
     float borderThickness = 0.1f; // Adjust this value to change the border thickness
 
-    // Draw the black border as a larger rectangle behind the main rectangle
-    glColor3f(0.0f, 0.0f, 0.0f); // Set color to black for the border
-    glBegin(GL_QUADS);           // Start drawing a rectangle for the border
-    // Calculate and draw vertices for the border, offsetting by the border thickness
-    glVertex2f(x - borderThickness, y - borderThickness);
-    glVertex2f(x + width + borderThickness, y - borderThickness);
-    glVertex2f(x + width + borderThickness, y + height + borderThickness);
-    glVertex2f(x - borderThickness, y + height + borderThickness);
-    glEnd(); // End drawing the border rectangle
+    // Main rectangle color
+    glColor3f(red, green, blue);
 
-    // Draw the main filled rectangle
-    glColor3f(red, green, blue);       // Set the color for the main rectangle
-    glBegin(GL_QUADS);                 // Start drawing the main rectangle
-    glVertex2f(x, y);                  // Bottom left corner
-    glVertex2f(x + width, y);          // Bottom right corner
-    glVertex2f(x + width, y + height); // Top right corner
-    glVertex2f(x, y + height);         // Top left corner
-    glEnd();                           // End drawing the filled rectangle
+    // Draw the main filled box (rectangular prism)
+    glBegin(GL_QUADS);
+
+    // Front face
+    glVertex3f(x, y, z);
+    glVertex3f(x + width, y, z);
+    glVertex3f(x + width, y + height, z);
+    glVertex3f(x, y + height, z);
+
+    // Back face
+    glVertex3f(x, y, z - depth);
+    glVertex3f(x + width, y, z - depth);
+    glVertex3f(x + width, y + height, z - depth);
+    glVertex3f(x, y + height, z - depth);
+
+    // Top face
+    glVertex3f(x, y + height, z);
+    glVertex3f(x + width, y + height, z);
+    glVertex3f(x + width, y + height, z - depth);
+    glVertex3f(x, y + height, z - depth);
+
+    // Bottom face
+    glVertex3f(x, y, z);
+    glVertex3f(x + width, y, z);
+    glVertex3f(x + width, y, z - depth);
+    glVertex3f(x, y, z - depth);
+
+    // Right face
+    glVertex3f(x + width, y, z);
+    glVertex3f(x + width, y + height, z);
+    glVertex3f(x + width, y + height, z - depth);
+    glVertex3f(x + width, y, z - depth);
+
+    // Left face
+    glVertex3f(x, y, z);
+    glVertex3f(x, y + height, z);
+    glVertex3f(x, y + height, z - depth);
+    glVertex3f(x, y, z - depth);
+
+    glEnd();
+
+    // Draw the border
+    glColor3f(0.0f, 0.0f, 0.0f); // Set color to black for the border
+
+    // Draw border lines around the box to simulate a thicker border
+    glLineWidth(borderThickness * 10); // Adjust line width for visible border
+
+    glBegin(GL_LINES);
+
+    // Front face borders
+    glVertex3f(x, y, z);
+    glVertex3f(x + width, y, z);
+
+    glVertex3f(x + width, y, z);
+    glVertex3f(x + width, y + height, z);
+
+    glVertex3f(x + width, y + height, z);
+    glVertex3f(x, y + height, z);
+
+    glVertex3f(x, y + height, z);
+    glVertex3f(x, y, z);
+
+    // Connect front face to back face
+    glVertex3f(x, y, z);
+    glVertex3f(x, y, z - depth);
+
+    glVertex3f(x + width, y, z);
+    glVertex3f(x + width, y, z - depth);
+
+    glVertex3f(x + width, y + height, z);
+    glVertex3f(x + width, y + height, z - depth);
+
+    glVertex3f(x, y + height, z);
+    glVertex3f(x, y + height, z - depth);
+
+    // Back face borders
+    glVertex3f(x, y, z - depth);
+    glVertex3f(x + width, y, z - depth);
+
+    glVertex3f(x + width, y, z - depth);
+    glVertex3f(x + width, y + height, z - depth);
+
+    glVertex3f(x + width, y + height, z - depth);
+    glVertex3f(x, y + height, z - depth);
+
+    glVertex3f(x, y + height, z - depth);
+    glVertex3f(x, y, z - depth);
+
+    glEnd();
 }
+
 
 // display ---------------------------------------------------------------------------------
 void display()
 {
-    glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer
-    glLoadIdentity();             // Load the identity matrix
-    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the color and depth buffers
+    glLoadIdentity(); // Reset the view
+
+    // Set up the camera position, looking at the center of the scene
+    gluLookAt(0.0, 0.0, 30.0, // Camera position in World Space
+              0.0, 0.0, 0.0, // Looks at the origin
+              0.0, 1.0, 0.0); // Head is up (set to 0,-1,0 to look upside-down)
+
+    // Adjust the positions, sizes, and add the depth parameter for 3D rectangles
+    // For the purpose of this example, I'll define a generic depth for all objects
+    float depth = 0.5f; // Example depth
+
+    // adjust x, y, z, width, height, and depth values for your scene
+
+    // trim right
+    drawRectangle(6, -7.4, 0, 5.0, 1, depth, 0.0f, 0.0f, 0.0f);
+
+    // trim right
+    drawRectangle(6, -7.4, 0, 5.0, 1, depth, 0.0f, 0.0f, 0.0f);
+
     // roof
-    drawRectangle(-10, 8.0, 20.0, 5, 0.0f, 0.1f, 0.1f);
+     drawRectangle(-10, 8.0, 0, 20.0, 7, depth, 0.0f, 0.1f, 0.1f);
 
     // side light
-    drawRectangle(2.5, -7, 3.5, 15, 0.0f, 0.1f, 0.1f);
+    drawRectangle(2.5, -7, 0, 3.5, 15, depth, 0.0f, 0.1f, 0.1f);
+
+    // wall Right side
+    drawRectangle(6.1, -6.5, 0, 4, 14.5, depth, 1.0f, 1.0f, 1.0f);
+
+    // wall left side
+    drawRectangle(-10, -7, 0, 2.5, 15, depth, 1.0f, 1.0f, 1.0f);
+
+    // steel left door frame
+    drawRectangle(-7.6, -7, 0, 0.5, 15, depth, 0.5f, 0.5f, 0.5f);
+
+    
+
+    // steel center door frame
+    drawRectangle(2, -7, 0, 0.5, 15, depth, 0.5f, 0.5f, 0.5f);
+
+    // steel right door frame
+    drawRectangle(6, -7, 0, 0.5, 15, depth, 0.5f, 0.5f, 0.5f);
+
+    /// steel TOP door frame
+    drawRectangle(-7.6, 8, 0, 14, 0.5, depth, 0.5f, 0.5f, 0.5f);
+
+
 
     // floor
-    drawRectangle(-10, -12.0, 20.0, 5, 0.1f, 0.0f, 0.0f);  // Draw a blue rectangle
-    
-    //trim left
-    drawRectangle(-10, -7.4, 3.0, 1, 0.0f, 0.0f, 0.0f);  // Draw a blue rectangle
-    
-    //trim right
-    drawRectangle(6, -7.4, 5.0, 1, 0.0f, 0.0f, 0.0f);  // Draw a blue rectangle
+    drawRectangle(-10, -12.0, 0, 20.0, 5, depth, 0.1f, 0.0f, 0.0f);
+
+    // trim left
+    drawRectangle(-10, -7.4, 0, 3.0, 1, depth, 0.0f, 0.0f, 0.0f);
 
     
-    drawDoor();      // Draw the door
-    drawDoorFrame(); // Draw the door frame
-    // drawGrid();      // Draw the grid
 
-    // Example call to drawRectangle with color parameters
-    // Parameters: X, Y, Width, Height, Red, Green, Blue
-    drawRectangle(2.5, 2.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f);  // Draw a blue rectangle
-    drawRectangle(2.5, -1.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
-    drawRectangle(2.5, -3.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
-    drawRectangle(2.5, -6.0, 3.0, 2.0, 1.0f, 1.0f, 1.0f); // Draw a blue rectangle
-    drawRectangle(6.8, 3.0, 3.0, 1.5, 1.0f, 1.0f, 1.0f);  // Draw a blue rectangle
-    
-    glFlush();                                            // Flush OpenGL pipeline
+    // Drawing 3D objects
+    drawDoor(); // Draw the door in 3D
+
+    // Windows or other rectangles (adjusting parameters to match 3D function signature)
+    drawRectangle(2.5, 2.0, 0, 3.0, 1.5, depth, 1.0f, 1.0f, 1.0f);
+    drawRectangle(2.5, -1.0, 0, 3.0, 1.5, depth, 1.0f, 1.0f, 1.0f);
+    drawRectangle(2.5, -3.0, 0, 3.0, 1.5, depth, 1.0f, 1.0f, 1.0f);
+    drawRectangle(2.5, -6.0, 0, 3.0, 2.0, depth, 1.0f, 1.0f, 1.0f);
+    drawRectangle(6.8, 3.0, 0, 3.0, 1.5, depth, 1.0f, 1.0f, 1.0f);
+
+    // If using double buffering, swap the buffers to display what just got rendered.
+    // glFlush(); // Use this if single buffering
+    glutSwapBuffers(); // Use this for double buffering
 }
+
 
 // update ---------------------------------------------------------------------------------
 void update(int value)
